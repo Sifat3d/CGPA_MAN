@@ -112,7 +112,8 @@ bool tryMoveObjects(Movement Tusermove, object &Tstudent,bool (&Tmaptaken)[GRIDS
     return 1;
 }
 
-bool moveMonsters(Movement &TgoThisWay,object &TgradeMonster,bool (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM]){
+bool moveMonsters(Movement &TgoThisWay,object &TgradeMonster,bool (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
+{
                     bool flag = tryMoveObjects(TgoThisWay,TgradeMonster,Tmaptaken);
                     //cout<<"flag"<<flag<<" go"<<TgoThisWay<<endl;
 
@@ -130,6 +131,21 @@ bool moveMonsters(Movement &TgoThisWay,object &TgradeMonster,bool (&Tmaptaken)[G
 bool isColliding(object &player,object &monster)
 {
     return (player.x==monster.x && player.y==monster.y);
+}
+
+bool eatGrade(object &Tstudent, object &TaPlus,unsigned int &TscoreUser)
+{
+            if(isColliding(Tstudent,TaPlus))
+            {
+                TscoreUser++;
+                //hide object and move away
+                TaPlus.x=-1;
+                TaPlus.y=-1;
+                TaPlus.me.setPosition(-WINDOW_HW,-WINDOW_HW);
+                return true;
+            }
+
+            return false;
 }
 
 int main(){
@@ -209,10 +225,14 @@ int main(){
     Texture aPlusTexture;
     aPlusTexture.setSmooth(true);
     aPlusTexture.loadFromFile("a.png");
-    //set aPlus
 
+    //set aPlus
     object aPlus_1(11,7,OBJECT_AREA/2);
     aPlus_1.me.setTexture(&aPlusTexture);
+
+    object aPlus_2(14,10,OBJECT_AREA/2);
+    aPlus_2.me.setTexture(&aPlusTexture);
+
 
     //set endGame window :p
     RectangleShape endGame;
@@ -386,6 +406,7 @@ int main(){
             //cout<<usermove;
             //cout<<usermove<<" x,y: "<<student.x<<","<<student.y<<endl;
             window.draw(aPlus_1.me);
+            window.draw(aPlus_2.me);
             window.draw(student.me);
             window.draw(gradeMonster_1.me);
             window.draw(gradeMonster_2.me);
@@ -401,16 +422,9 @@ int main(){
 
 
 
-
-            if(isColliding(student,aPlus_1))
-            {
-                scoreUser++;
-
-                //hide object and move away
-                aPlus_1.x=-1;
-                aPlus_1.y=-1;
-                aPlus_1.me.setPosition(-WINDOW_HW,-WINDOW_HW);
-            }
+            //Check user and grade eating
+            eatGrade(student,aPlus_1,scoreUser);
+            eatGrade(student,aPlus_2,scoreUser);
 
 
         //draw & end the current frame
