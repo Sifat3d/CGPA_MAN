@@ -2,6 +2,7 @@
 #include <string>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 //Simple Pacman Clone in C++ using SFML
 //Author: Sohan Chowdhury
@@ -24,7 +25,7 @@ const float GRID_SPACING = 0;
 const int OBJECT_AREA = GRID_AREA - (GRID_SPACING*2);
 const int Game_FPS = 60;
 const int USER_MOVE_EVERY = 60;
-const int ENEMY_MOVE_EVERY = 2; //times user
+const int ENEMY_MOVE_EVERY = 5; //times user
 
 const Color BG = Color(110, 189, 195);
 const Color WALL = Color(87, 98, 116);
@@ -150,7 +151,7 @@ bool isColliding(object &player,object &monster)
     return (player.x==monster.x && player.y==monster.y);
 }
 
-bool eatGrade(object &Tstudent, object &TaPlus,unsigned int &TscoreUser)
+bool eatGrade(object &Tstudent, object &TaPlus,unsigned int &TscoreUser, Sound &sound)
 {
             if(isColliding(Tstudent,TaPlus))
             {
@@ -159,6 +160,9 @@ bool eatGrade(object &Tstudent, object &TaPlus,unsigned int &TscoreUser)
                 TaPlus.x=-1;
                 TaPlus.y=-1;
                 TaPlus.me.setPosition(-WINDOW_HW,-WINDOW_HW);
+                sound.play();
+
+
                 return true;
             }
 
@@ -290,7 +294,7 @@ int main(){
 
 
     //window from library
-    RenderWindow window(VideoMode(WINDOW_HW,WINDOW_HW), "CGPA_MAN a2.0");
+    RenderWindow window(VideoMode(WINDOW_HW,WINDOW_HW), "CGPA_MAN b-v1.3");
     window.setFramerateLimit(Game_FPS);
 
 //Library time functions
@@ -301,6 +305,19 @@ int main(){
     int userMoved = 0;  //tracks user turns
     bool runGame = true;
     Movement usermove = gonone;
+
+
+    //Play sound before Game Loop
+    SoundBuffer pacmanIntro;
+    pacmanIntro.loadFromFile("pacman_beginning.wav");
+    Sound introMusic;
+    introMusic.setBuffer(pacmanIntro);
+    introMusic.play();
+
+    SoundBuffer pacmanEat;
+    pacmanEat.loadFromFile("pacman_eatfruit.wav");
+    Sound pacmanEatMusic;
+    pacmanEatMusic.setBuffer(pacmanEat);
 //Library Game Loop
      while (window.isOpen())
     {
@@ -409,7 +426,7 @@ int main(){
             }
 
 
-        //Score Update
+        //Score display Update
             string scoreTextString = "Score: 0";
             scoreTextString[7] = scoreUser+'0';
             //cout<<scoreTextString<<endl;
@@ -471,10 +488,10 @@ int main(){
 
 
             //Check user and grade eating
-            eatGrade(student,aPlus_1,scoreUser);
-            eatGrade(student,aPlus_2,scoreUser);
-            eatGrade(student,aPlus_3,scoreUser);
-            eatGrade(student,aPlus_4,scoreUser);
+            eatGrade(student,aPlus_1,scoreUser,pacmanEatMusic);
+            eatGrade(student,aPlus_2,scoreUser,pacmanEatMusic);
+            eatGrade(student,aPlus_3,scoreUser,pacmanEatMusic);
+            eatGrade(student,aPlus_4,scoreUser,pacmanEatMusic);
 
 
         //draw & end the current frame
