@@ -128,6 +128,23 @@ bool moveMonsters(Movement &TgoThisWay,object &TgradeMonster,bool (&Tmaptaken)[G
             return 0;
 }
 
+bool moveMonstersUpDown(Movement &TgoThisWay,object &TgradeMonster,bool (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
+{
+                    bool flag = tryMoveObjects(TgoThisWay,TgradeMonster,Tmaptaken);
+                   // cout<<"flagupdown"<<flag<<" go"<<TgoThisWay<<endl;
+
+                    if(flag==1 && TgoThisWay==goup)
+                        {
+                         TgoThisWay = godown;
+                        }
+                    else if(TgoThisWay==godown && flag==1)
+                        {
+                         TgoThisWay = goup;
+                        }
+            return 0;
+}
+
+
 bool isColliding(object &player,object &monster)
 {
     return (player.x==monster.x && player.y==monster.y);
@@ -218,6 +235,10 @@ int main(){
     object gradeMonster_4(7,14,OBJECT_AREA/2);
     gradeMonster_4.me.setTexture(&gradeMonsterTexture);
 
+    object gradeMonster_UpDown(1,12,OBJECT_AREA/2);
+    gradeMonster_UpDown.me.setTexture(&gradeMonsterTexture);
+    gradeMonster_UpDown.goThisWay = goup;
+
 
     //aPlus concept setup
 
@@ -232,6 +253,12 @@ int main(){
 
     object aPlus_2(14,10,OBJECT_AREA/2);
     aPlus_2.me.setTexture(&aPlusTexture);
+
+    object aPlus_3(13,3,OBJECT_AREA/2);
+    aPlus_3.me.setTexture(&aPlusTexture);
+
+    object aPlus_4(0,10,OBJECT_AREA/2);
+    aPlus_4.me.setTexture(&aPlusTexture);
 
 
     //set endGame window :p
@@ -372,11 +399,12 @@ int main(){
             {
                 userMoved++;
                 if(userMoved>ENEMY_MOVE_EVERY){
-                        userMoved=0;
+                    userMoved=0;
                     moveMonsters(gradeMonster_1.goThisWay,gradeMonster_1,maptaken);
                     moveMonsters(gradeMonster_2.goThisWay,gradeMonster_2,maptaken);
                     moveMonsters(gradeMonster_3.goThisWay,gradeMonster_3,maptaken);
                     moveMonsters(gradeMonster_4.goThisWay,gradeMonster_4,maptaken);
+                    moveMonstersUpDown(gradeMonster_UpDown.goThisWay,gradeMonster_UpDown,maptaken);
                     }
             }
 
@@ -390,7 +418,8 @@ int main(){
 
 //Collision detection here
             if(isColliding(student,gradeMonster_1) || isColliding(student,gradeMonster_2) ||
-               isColliding(student,gradeMonster_3) || isColliding(student,gradeMonster_4))
+               isColliding(student,gradeMonster_3) || isColliding(student,gradeMonster_4)
+               || isColliding(student,gradeMonster_UpDown))
             {
                 student.me.setFillColor(Color::Red);
                 endGame.setSize(Vector2f(toActual(11),toActual(11)));
@@ -402,16 +431,35 @@ int main(){
                 runGame = false;
             }
 
+            //win
+            if(student.x == 8 && student.y==0)
+            {
+                student.me.setFillColor(Color::Green);
+                endGame.setSize(Vector2f(toActual(11),toActual(11)));
+                endGame.setFillColor(Color(255,87,34));
+                endGame.setOutlineColor(WALL);
+                endGame.setOutlineThickness(0.5);
+                endGame.setPosition(toActual(3),toActual(3));
+                scoreText.setPosition(toActual(9),toActual(12));
+                runGame = false;
+                gameOverText.setString("You WIN!!!");
+
+            }
+
         //Draw Stuff using Library
             //cout<<usermove;
             //cout<<usermove<<" x,y: "<<student.x<<","<<student.y<<endl;
             window.draw(aPlus_1.me);
             window.draw(aPlus_2.me);
+            window.draw(aPlus_3.me);
+            window.draw(aPlus_4.me);
             window.draw(student.me);
             window.draw(gradeMonster_1.me);
             window.draw(gradeMonster_2.me);
             window.draw(gradeMonster_3.me);
             window.draw(gradeMonster_4.me);
+            window.draw(gradeMonster_UpDown.me);
+
             if(runGame==false)
             {
                 window.draw(endGame);
@@ -425,6 +473,8 @@ int main(){
             //Check user and grade eating
             eatGrade(student,aPlus_1,scoreUser);
             eatGrade(student,aPlus_2,scoreUser);
+            eatGrade(student,aPlus_3,scoreUser);
+            eatGrade(student,aPlus_4,scoreUser);
 
 
         //draw & end the current frame
