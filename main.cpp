@@ -11,7 +11,7 @@
 //Twitter: iamsohan
 //Anyone is free to learn using this code however they want.
 //Bugfixes or improvements are welcome
-//SFML Library is required
+//SFML 32bit Library is required
 //Made & tested in Windows 32 & 64 bit environment
 
 using namespace std;
