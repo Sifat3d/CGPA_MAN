@@ -427,7 +427,7 @@ int main(){
 
 
         //Score display Update
-            string scoreTextString = "Score: 0";
+            string scoreTextString = "CGPA:  0";
             scoreTextString[7] = scoreUser+'0';
             //cout<<scoreTextString<<endl;
             scoreText.setString(scoreTextString);
