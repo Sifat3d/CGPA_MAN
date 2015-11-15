@@ -1,0 +1,6 @@
+FRUIT 3 TYPES.
+1 for score
+2nd for freeze everybody
+3rd for multiplier bonus.
+
+can eat ghost by eating freeze fruit.
