@@ -1,5 +1,8 @@
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <cstdlib>
+#include <ctime>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -17,9 +20,9 @@
 using namespace std;
 using namespace sf;
 
-
-const int WINDOW_HW= 680;
-const int GRIDS_NUM = 17;
+const int PLAYER_LIVES = 3;
+const int WINDOW_HW= 694;
+const int GRIDS_NUM = 21;
 const int GRID_AREA = WINDOW_HW/GRIDS_NUM;
 const float GRID_SPACING = 0;
 const int OBJECT_AREA = GRID_AREA - (GRID_SPACING*2);
@@ -42,12 +45,19 @@ int toGrid(int x)
     return x/GRID_AREA;
 }
 
+double roundToTwo( double f )
+{
+    return (floor((f * 100) + 0.5)) / 100;
+}
 
 class object{
 public:
     CircleShape me;
     int x,y;
     Movement goThisWay;  //ONLY for ENEMY OBJECTS!!!
+    unsigned int retakes;   //ONLY for PLAYER OBJECT!!!
+    bool tempImmune;    //ONLY for PLAYER OBJECT!!!
+    int somethingHappenedFrame;
 
     object(int xval, int yval,int rval){
         x=xval;
@@ -55,6 +65,9 @@ public:
         me.setRadius(rval);
         me.setPosition(getGrid());
         goThisWay = goleft;
+        retakes = PLAYER_LIVES;
+        tempImmune = false;
+        somethingHappenedFrame = 0;
     }
 
     Vector2f getGrid()
@@ -74,34 +87,34 @@ public:
 
 };
 
-bool tryMoveObjects(Movement Tusermove, object &Tstudent,bool (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
+bool tryMoveObjects(Movement Tusermove, object &Tstudent,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
 {
 
     switch(Tusermove)
         {
             case 0: //left
-                if(Tmaptaken[Tstudent.y][Tstudent.x-1] == 0  && Tstudent.x-1>=0)
+                if(Tmaptaken[Tstudent.y][Tstudent.x-1] != 1  && Tstudent.x-1>=0)
                 {
                     Tstudent.move(-1,0);
                     return 0;
                 }
                 return 1;
             case 1: //right
-                if(Tmaptaken[Tstudent.y][Tstudent.x+1] == 0  && Tstudent.x+1<GRIDS_NUM)
+                if(Tmaptaken[Tstudent.y][Tstudent.x+1] != 1  && Tstudent.x+1<GRIDS_NUM)
                 {
                     Tstudent.move(+1,0);
                     return 0;
                 }
                 return 1;
             case 2: //up
-                if(Tmaptaken[Tstudent.y-1][Tstudent.x] == 0  && Tstudent.y-1>=0)
+                if(Tmaptaken[Tstudent.y-1][Tstudent.x] != 1  && Tstudent.y-1>=0)
                 {
                     Tstudent.move(0,-1);
                     return 0;
                 }
                 return 1;
             case 3: //down
-                if(Tmaptaken[Tstudent.y+1][Tstudent.x] == 0  && Tstudent.y+1<GRIDS_NUM)
+                if(Tmaptaken[Tstudent.y+1][Tstudent.x] != 1  && Tstudent.y+1<GRIDS_NUM)
                 {
                     Tstudent.move(0,+1);
                     return 0;
@@ -113,35 +126,109 @@ bool tryMoveObjects(Movement Tusermove, object &Tstudent,bool (&Tmaptaken)[GRIDS
     return 1;
 }
 
-bool moveMonsters(Movement &TgoThisWay,object &TgradeMonster,bool (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
+bool CanMoveObjects(Movement Tusermove, object &Tstudent,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
 {
-                    bool flag = tryMoveObjects(TgoThisWay,TgradeMonster,Tmaptaken);
+
+    switch(Tusermove)
+        {
+            case 0: //left
+                if(Tmaptaken[Tstudent.y][Tstudent.x-1] != 1  && Tstudent.x-1>=0)
+                {
+                    return true;
+                }
+                break;
+
+            case 1: //right
+                if(Tmaptaken[Tstudent.y][Tstudent.x+1] != 1  && Tstudent.x+1<GRIDS_NUM)
+                {
+                    return true;
+                }
+                break;
+
+            case 2: //up
+                if(Tmaptaken[Tstudent.y-1][Tstudent.x] != 1  && Tstudent.y-1>=0)
+                {
+                    return true;
+                }
+                break;
+
+            case 3: //down
+                if(Tmaptaken[Tstudent.y+1][Tstudent.x] != 1  && Tstudent.y+1<GRIDS_NUM)
+                {
+                    return true;
+                }
+                break;
+
+            case 4:
+                return true;
+                break;
+        }
+    return false;
+}
+
+bool moveMonsters(object &TgradeMonster,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
+{
+                    bool flag = tryMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken);
                     //cout<<"flag"<<flag<<" go"<<TgoThisWay<<endl;
 
-                    if(flag==1 && TgoThisWay==goleft)
+                    if(flag==1 && TgradeMonster.goThisWay==goleft)
                         {
-                         TgoThisWay = goright;
+                         TgradeMonster.goThisWay = goright;
                         }
-                    else if(TgoThisWay==goright && flag==1)
+                    else if(TgradeMonster.goThisWay==goright && flag==1)
                         {
-                         TgoThisWay = goleft;
+                         TgradeMonster.goThisWay = goleft;
                         }
             return 0;
 }
 
-bool moveMonstersUpDown(Movement &TgoThisWay,object &TgradeMonster,bool (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
+bool moveMonstersRandom(object &TgradeMonster,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
 {
-                    bool flag = tryMoveObjects(TgoThisWay,TgradeMonster,Tmaptaken);
-                   // cout<<"flagupdown"<<flag<<" go"<<TgoThisWay<<endl;
 
-                    if(flag==1 && TgoThisWay==goup)
+                    //THIS CODE IS FOR EMERGENCY :p
+                    //These make the movements dynamic but closed in a loop.
+                    //the new implementation is fully random
+                    /*
+                    bool flag = 0;
+                    if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==false && TgradeMonster.goThisWay!=goright)
                         {
-                         TgoThisWay = godown;
+                         TgradeMonster.goThisWay = goleft;
+                         if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==true)
+                            {flag = 1;}
                         }
-                    else if(TgoThisWay==godown && flag==1)
+                    if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==false  && flag == 0 && TgradeMonster.goThisWay!=godown)
                         {
-                         TgoThisWay = goup;
+                         TgradeMonster.goThisWay = goup;
+                         if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==true)
+                            {flag = 1;}
                         }
+                    if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==false  && flag == 0 && TgradeMonster.goThisWay!=goup)
+                        {
+                         TgradeMonster.goThisWay = godown;
+                         if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==true)
+                            {flag = 1;}
+                        }
+
+                    if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==false && flag == 0 && TgradeMonster.goThisWay!=goleft)
+                        {
+                         TgradeMonster.goThisWay = goright;
+                         if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==true)
+                            {flag = 1;}
+                        }
+                        */
+
+
+
+                    if(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)==false)
+                        {
+                            while(CanMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken)!=true)
+                            {
+                            int randomMove = rand() % 4;
+                            TgradeMonster.goThisWay = (Movement)randomMove;
+                            }
+                        }
+
+                    tryMoveObjects(TgradeMonster.goThisWay,TgradeMonster,Tmaptaken);
             return 0;
 }
 
@@ -151,65 +238,94 @@ bool isColliding(object &player,object &monster)
     return (player.x==monster.x && player.y==monster.y);
 }
 
-bool eatGrade(object &Tstudent, object &TaPlus,unsigned int &TscoreUser, Sound &sound)
+bool isEating(object &player,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
 {
-            if(isColliding(Tstudent,TaPlus))
-            {
-                TscoreUser++;
-                //hide object and move away
-                TaPlus.x=-1;
-                TaPlus.y=-1;
-                TaPlus.me.setPosition(-WINDOW_HW,-WINDOW_HW);
-                sound.play();
-
-
-                return true;
-            }
-
-            return false;
+    return (Tmaptaken[player.y][player.x]==9);
 }
 
+bool EatTheGrade(object &player,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM],string (&TRTgridmap)[GRIDS_NUM], double &TscoreUser,int TaPlusCount, Sound &sound)
+{
+    //cout<<TaPlusCount<<endl;
+    TscoreUser = TscoreUser+(4.0/TaPlusCount);
+    //cout<<TscoreUser<<endl;
+    sound.play();
+    TRTgridmap[player.y][player.x]=' ';
+    player.me.setFillColor(Color::White);
+    return true;
+}
+
+
+
 int main(){
+
 
     //MAP
     //below map MUST be GRIDS_NUM*GRIDS_NUM.
     //THIS IS ONE OF THE NON VARIABLE THINGS THAT ARE PRESET
     string gridmap[GRIDS_NUM];
-    gridmap[0]=   "--------*--------";
-    gridmap[1]=   "                 ";
-    gridmap[2]=   "- -------------- ";
-    gridmap[3]=   "-                ";
-    gridmap[4]=   "--------- -------";
-    gridmap[5]=   "                 ";
-    gridmap[6]=   "- ------------ --";
-    gridmap[7]=   "            -    ";
-    gridmap[8]=   "--------- ----- -";
-    gridmap[9]=   "        -        ";
-    gridmap[10]=  "             - - ";
-    gridmap[11]=  "- -------- ------";
-    gridmap[12]=  "-                ";
-    gridmap[13]=  "--------- -------";
-    gridmap[14]=  "                 ";
-    gridmap[15]=  "- ---------------";
-    gridmap[16]=  "*****************";
-    bool maptaken[GRIDS_NUM][GRIDS_NUM];
+    gridmap[0]=   "XXXXXXXXXX*XXXXXXXXXX";
+    gridmap[1]=   "X +   +   +   +   + X";
+    gridmap[2]=   "X X+ XXX  X  XXX+ X X";
+    gridmap[3]=   "X  +X+ +  X  + +X+  X";
+    gridmap[4]=   "X +X+X+X+XXX+X+X+X+ X";
+    gridmap[5]=   "X+ X    + + +    X +X";
+    gridmap[6]=   "X +X++XXXXXXXXX++X+ X";
+    gridmap[7]=   "X X  X+++++++++X  X X";
+    gridmap[8]=   "X  +   X+++++X   +  X";
+    gridmap[9]=   "X   X   X+++X + X + X";
+    gridmap[10]=  "X+X + + +XXX+ + + X+X";
+    gridmap[11]=  "X  +   +     +   +  X";
+    gridmap[12]=  "X+XXXX   XXX   XXXX+X";
+    gridmap[13]=  "X + + + X + X + + + X";
+    gridmap[14]=  "X+XX X XX   XX X XX+X";
+    gridmap[15]=  "XX  +  +  X  +  +  XX";
+    gridmap[16]=  "X   XXX +   + XXX   X";
+    gridmap[17]=  "X+X     X + X     X+X";
+    gridmap[18]=  "X XXX+XXX X XXX+XXX X";
+    gridmap[19]=  "X + + + +   + + + + X";
+    gridmap[20]=  "XXXXXXXXXXXXXXXXXXXXX";
+
+ //this is the ingame map, it changes according to player
+    string RTgridmap[GRIDS_NUM] = gridmap;
+
+ //SEED for RANDOM NUMBER GENERATOR in MOVEMENT
+    srand (time(NULL));
+
+    //aPlus Count from map
+        unsigned int aPlusCounter=0;
+    //where walls take spaces
+    int maptaken[GRIDS_NUM][GRIDS_NUM];
 
     int i,j;
     for(i=0;i<GRIDS_NUM;i++)
     {
         for(j=0;j<GRIDS_NUM;j++)
         {
+           if(RTgridmap[i][j]=='+'){aPlusCounter++;}
             maptaken[i][j]=1;
         }
     }
 
+    //map tile
     RectangleShape backgrid;
     backgrid.setSize(Vector2f(OBJECT_AREA,OBJECT_AREA));
     backgrid.setOutlineThickness(GRID_SPACING);
     backgrid.setOutlineColor(Color::White);
 
+    //aplus tile
+        //load aPlus image
+        Texture aPlusTexture;
+        aPlusTexture.setSmooth(true);
+        aPlusTexture.loadFromFile("a.png");
+
+        CircleShape aPlusTile;
+        aPlusTile.setRadius(OBJECT_AREA/2);
+        aPlusTile.setTexture(&aPlusTexture);
+
+
     //player setup
-    object student(8,16,OBJECT_AREA/2);
+    object student(GRIDS_NUM/2,GRIDS_NUM-2,OBJECT_AREA/2);
+
     //student.me.setPosition(toActual(5),toActual(10));
 
     Texture userTexture;
@@ -227,46 +343,34 @@ int main(){
     gradeMonsterTexture.loadFromFile("f.png");
 
     //set monsters
-    object gradeMonster_1(9,7,OBJECT_AREA/2);
+    object gradeMonster_1(0,7,OBJECT_AREA/2);
     gradeMonster_1.me.setTexture(&gradeMonsterTexture);
 
-    object gradeMonster_2(15,9,OBJECT_AREA/2);
+    object gradeMonster_2(4,9,OBJECT_AREA/2);
     gradeMonster_2.me.setTexture(&gradeMonsterTexture);
 
-    object gradeMonster_3(11,3,OBJECT_AREA/2);
+    object gradeMonster_3(9,9,OBJECT_AREA/2);
     gradeMonster_3.me.setTexture(&gradeMonsterTexture);
 
-    object gradeMonster_4(7,14,OBJECT_AREA/2);
+    object gradeMonster_4(12,14,OBJECT_AREA/2);
     gradeMonster_4.me.setTexture(&gradeMonsterTexture);
 
-    object gradeMonster_UpDown(1,12,OBJECT_AREA/2);
-    gradeMonster_UpDown.me.setTexture(&gradeMonsterTexture);
-    gradeMonster_UpDown.goThisWay = goup;
+    object gradeMonster_5(16,16,OBJECT_AREA/2);
+    gradeMonster_5.me.setTexture(&gradeMonsterTexture);
 
+    object gradeMonster_6(19,12,OBJECT_AREA/2);
+    gradeMonster_6.me.setTexture(&gradeMonsterTexture);
 
-    //aPlus concept setup
-
-    //load aPlus image
-    Texture aPlusTexture;
-    aPlusTexture.setSmooth(true);
-    aPlusTexture.loadFromFile("a.png");
-
-    //set aPlus
-    object aPlus_1(11,7,OBJECT_AREA/2);
-    aPlus_1.me.setTexture(&aPlusTexture);
-
-    object aPlus_2(14,10,OBJECT_AREA/2);
-    aPlus_2.me.setTexture(&aPlusTexture);
-
-    object aPlus_3(13,3,OBJECT_AREA/2);
-    aPlus_3.me.setTexture(&aPlusTexture);
-
-    object aPlus_4(0,10,OBJECT_AREA/2);
-    aPlus_4.me.setTexture(&aPlusTexture);
+    object gradeMonster_Test(GRIDS_NUM/2,GRIDS_NUM-6,OBJECT_AREA/2);
+    gradeMonster_Test.me.setTexture(&gradeMonsterTexture);
 
 
     //set endGame window :p
     RectangleShape endGame;
+    endGame.setSize(Vector2f(toActual(GRIDS_NUM/1.4),toActual(GRIDS_NUM/1.4)));
+    endGame.setOutlineColor(WALL);
+    endGame.setOutlineThickness(0.3);
+    endGame.setPosition(toActual((GRIDS_NUM/3)/2),toActual((GRIDS_NUM/3)/2));
 
         //Text stuff
 
@@ -279,22 +383,30 @@ int main(){
         gameOverText.setFont(roboto);
         gameOverText.setCharacterSize((OBJECT_AREA-10)*2);
         gameOverText.setColor(Color::White);
-        gameOverText.setPosition(toActual(5),toActual(6));
+        gameOverText.setPosition(toActual(GRIDS_NUM/3),toActual(GRIDS_NUM/3));
         gameOverText.setString("Game Over!");
 
-    //setup Score text
-        //Score
+    //setup STATUS text
+        //Score/CGPA
 
         Text scoreText;
         scoreText.setFont(roboto);
         scoreText.setCharacterSize(OBJECT_AREA-10);
         scoreText.setColor(Color::White);
-        scoreText.setPosition(toActual(14),toActual(16));
-        unsigned int scoreUser = 0;
+        scoreText.setPosition(toActual(GRIDS_NUM-4),toActual(GRIDS_NUM-1));
+        double scoreUser = 0;
+
+        //Retakes/Lives :v
+
+        Text retakesText;
+        retakesText.setFont(roboto);
+        retakesText.setCharacterSize(OBJECT_AREA-10);
+        retakesText.setColor(Color::White);
+        retakesText.setPosition(toActual(GRIDS_NUM-8),toActual(GRIDS_NUM-1));
 
 
     //window from library
-    RenderWindow window(VideoMode(WINDOW_HW,WINDOW_HW), "CGPA_MAN b-v1.3");
+    RenderWindow window(VideoMode(WINDOW_HW,WINDOW_HW), "CGPA_MAN b-v1.7");
     window.setFramerateLimit(Game_FPS);
 
 //Library time functions
@@ -305,6 +417,8 @@ int main(){
     int userMoved = 0;  //tracks user turns
     bool runGame = true;
     Movement usermove = gonone;
+
+    unsigned int countFrames = 0;
 
 
     //Play sound before Game Loop
@@ -321,10 +435,17 @@ int main(){
 //Library Game Loop
      while (window.isOpen())
     {
+        countFrames++;
+        if(countFrames>60*60*60*5)
+        {
+            countFrames = 0;
+        }
+
         runUser = false;
         time = clock.getElapsedTime();
         elapsed = time.asMilliseconds();
-        if(elapsed>USER_MOVE_EVERY){
+        if(elapsed>USER_MOVE_EVERY)
+        {
         clock.restart();
         runUser = true;
         }
@@ -354,11 +475,11 @@ int main(){
             for(j=0;j<GRIDS_NUM;j++)
             {
                 //cout<<"bool: "<<maptaken[i][j]<<endl;
-                if(gridmap[i][j]=='-')
+                if(RTgridmap[i][j]=='X')
                 {
                 backgrid.setFillColor(WALL);
                 }
-                else  if(gridmap[i][j]=='*')
+                else  if(RTgridmap[i][j]=='*')
                 {
                 backgrid.setFillColor(GOAL);
                 maptaken[i][j] = 0;
@@ -372,6 +493,12 @@ int main(){
                 backgrid.setPosition(toActual(j),toActual(i));
 
                 window.draw(backgrid);
+                if(RTgridmap[i][j]=='+')
+                {
+                    maptaken[i][j] = 9;
+                    aPlusTile.setPosition(toActual(j),toActual(i));
+                    window.draw(aPlusTile);
+                }
             }
         }
 
@@ -417,81 +544,111 @@ int main(){
                 userMoved++;
                 if(userMoved>ENEMY_MOVE_EVERY){
                     userMoved=0;
-                    moveMonsters(gradeMonster_1.goThisWay,gradeMonster_1,maptaken);
-                    moveMonsters(gradeMonster_2.goThisWay,gradeMonster_2,maptaken);
-                    moveMonsters(gradeMonster_3.goThisWay,gradeMonster_3,maptaken);
-                    moveMonsters(gradeMonster_4.goThisWay,gradeMonster_4,maptaken);
-                    moveMonstersUpDown(gradeMonster_UpDown.goThisWay,gradeMonster_UpDown,maptaken);
+                    moveMonstersRandom(gradeMonster_1,maptaken);
+                    moveMonstersRandom(gradeMonster_2,maptaken);
+                    moveMonstersRandom(gradeMonster_3,maptaken);
+                    moveMonstersRandom(gradeMonster_4,maptaken);
+                    moveMonstersRandom(gradeMonster_5,maptaken);
+                    moveMonstersRandom(gradeMonster_6,maptaken);
+                    moveMonstersRandom(gradeMonster_Test,maptaken);
                     }
             }
 
 
-        //Score display Update
-            string scoreTextString = "CGPA:  0";
-            scoreTextString[7] = scoreUser+'0';
-            //cout<<scoreTextString<<endl;
-            scoreText.setString(scoreTextString);
-
-
 //Collision detection here
-            if(isColliding(student,gradeMonster_1) || isColliding(student,gradeMonster_2) ||
-               isColliding(student,gradeMonster_3) || isColliding(student,gradeMonster_4)
-               || isColliding(student,gradeMonster_UpDown))
+
+            if((isColliding(student,gradeMonster_1) || isColliding(student,gradeMonster_2) ||
+               isColliding(student,gradeMonster_3) || isColliding(student,gradeMonster_4) ||
+               isColliding(student,gradeMonster_5) || isColliding(student,gradeMonster_6) ||
+               isColliding(student,gradeMonster_Test)) && student.tempImmune==false)
             {
                 student.me.setFillColor(Color::Red);
-                endGame.setSize(Vector2f(toActual(11),toActual(11)));
-                endGame.setFillColor(Color(255,87,34));
-                endGame.setOutlineColor(WALL);
-                endGame.setOutlineThickness(0.5);
-                endGame.setPosition(toActual(3),toActual(3));
-                scoreText.setPosition(toActual(9),toActual(12));
+                student.retakes--;
+                student.tempImmune = true;
+                student.somethingHappenedFrame = countFrames;
+                cout<<"retakes: "<<student.retakes<<endl;
+            }
+
+            if(student.tempImmune == true)
+            {
+                student.me.setFillColor(Color::Red);
+            }
+
+            if(student.tempImmune == true && countFrames - student.somethingHappenedFrame > 1*60)
+            {
+            student.tempImmune = false;
+            student.somethingHappenedFrame = 0;
+            }
+
+
+            if(student.retakes==0)
+            {
                 runGame = false;
+                endGame.setFillColor(Color(255,87,34));
+                scoreText.setPosition(toActual(9),toActual(12));
+            }
+
+            //eating grades
+            if(isEating(student,maptaken))
+            {
+                EatTheGrade(student,maptaken,RTgridmap,scoreUser,aPlusCounter,pacmanEatMusic);
             }
 
             //win
-            if(student.x == 8 && student.y==0)
+            if(RTgridmap[student.y][student.x]=='*') //since 2d array
             {
                 student.me.setFillColor(Color::Green);
-                endGame.setSize(Vector2f(toActual(11),toActual(11)));
                 endGame.setFillColor(Color(255,87,34));
-                endGame.setOutlineColor(WALL);
-                endGame.setOutlineThickness(0.5);
-                endGame.setPosition(toActual(3),toActual(3));
                 scoreText.setPosition(toActual(9),toActual(12));
                 runGame = false;
                 gameOverText.setString("You WIN!!!");
 
             }
 
+//STATUS display Update
+
+            //Score
+            string scoreTextString = "CGPA: ";
+            if(runGame==false)
+            {
+                scoreTextString = "Your CGPA is:  ";
+            }
+
+            ostringstream strs;
+            strs <<roundToTwo(scoreUser);
+            string strTemp = strs.str();
+
+            scoreTextString = scoreTextString+strTemp;
+            //cout<<scoreTextString<<endl;
+            scoreText.setString(scoreTextString);
+
+            //Retakes
+            string retakesTextString = "Retakes: N";
+            retakesTextString[9] = (student.retakes + '0');
+            retakesText.setString(retakesTextString);
+
         //Draw Stuff using Library
             //cout<<usermove;
             //cout<<usermove<<" x,y: "<<student.x<<","<<student.y<<endl;
-            window.draw(aPlus_1.me);
-            window.draw(aPlus_2.me);
-            window.draw(aPlus_3.me);
-            window.draw(aPlus_4.me);
+
             window.draw(student.me);
             window.draw(gradeMonster_1.me);
             window.draw(gradeMonster_2.me);
             window.draw(gradeMonster_3.me);
             window.draw(gradeMonster_4.me);
-            window.draw(gradeMonster_UpDown.me);
+            window.draw(gradeMonster_5.me);
+            window.draw(gradeMonster_6.me);
+            window.draw(gradeMonster_Test.me);
 
             if(runGame==false)
             {
                 window.draw(endGame);
                 window.draw(gameOverText);
             }
+            else {window.draw(retakesText);}
+
             window.draw(scoreText);
 
-
-
-
-            //Check user and grade eating
-            eatGrade(student,aPlus_1,scoreUser,pacmanEatMusic);
-            eatGrade(student,aPlus_2,scoreUser,pacmanEatMusic);
-            eatGrade(student,aPlus_3,scoreUser,pacmanEatMusic);
-            eatGrade(student,aPlus_4,scoreUser,pacmanEatMusic);
 
 
         //draw & end the current frame
