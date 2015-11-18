@@ -4,3 +4,5 @@ FRUIT 3 TYPES.
 3rd for multiplier bonus.
 
 can eat ghost by eating freeze fruit.
+
+May not be done :/
