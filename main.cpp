@@ -20,6 +20,7 @@
 using namespace std;
 using namespace sf;
 
+const string CGPA_MAN_VERSION = "CGPA MAN 1.7 beta";
 const int PLAYER_LIVES = 3;
 const int WINDOW_HW= 694;
 const int GRIDS_NUM = 21;
@@ -270,7 +271,7 @@ int main(){
     gridmap[4]=   "X +X+X+X+XXX+X+X+X+ X";
     gridmap[5]=   "X+ X    + + +    X +X";
     gridmap[6]=   "X +X++XXXXXXXXX++X+ X";
-    gridmap[7]=   "X X  X+++++++++X  X X";
+    gridmap[7]=   "XXX  X+++++++++X  XXX";
     gridmap[8]=   "X  +   X+++++X   +  X";
     gridmap[9]=   "X   X   X+++X + X + X";
     gridmap[10]=  "X+X + + +XXX+ + + X+X";
@@ -278,7 +279,7 @@ int main(){
     gridmap[12]=  "X+XXXX   XXX   XXXX+X";
     gridmap[13]=  "X + + + X + X + + + X";
     gridmap[14]=  "X+XX X XX   XX X XX+X";
-    gridmap[15]=  "XX  +  +  X  +  +  XX";
+    gridmap[15]=  "X   +  +  X  +  +   X";
     gridmap[16]=  "X   XXX +   + XXX   X";
     gridmap[17]=  "X+X     X + X     X+X";
     gridmap[18]=  "X XXX+XXX X XXX+XXX X";
@@ -343,7 +344,7 @@ int main(){
     gradeMonsterTexture.loadFromFile("f.png");
 
     //set monsters
-    object gradeMonster_1(0,7,OBJECT_AREA/2);
+    object gradeMonster_1(1,5,OBJECT_AREA/2);
     gradeMonster_1.me.setTexture(&gradeMonsterTexture);
 
     object gradeMonster_2(4,9,OBJECT_AREA/2);
@@ -384,7 +385,7 @@ int main(){
         gameOverText.setCharacterSize((OBJECT_AREA-10)*2);
         gameOverText.setColor(Color::White);
         gameOverText.setPosition(toActual(GRIDS_NUM/3),toActual(GRIDS_NUM/3));
-        gameOverText.setString("Game Over!");
+        gameOverText.setString("You have Failed!");
 
     //setup STATUS text
         //Score/CGPA
@@ -406,7 +407,7 @@ int main(){
 
 
     //window from library
-    RenderWindow window(VideoMode(WINDOW_HW,WINDOW_HW), "CGPA_MAN b-v1.7");
+    RenderWindow window(VideoMode(WINDOW_HW,WINDOW_HW), CGPA_MAN_VERSION);
     window.setFramerateLimit(Game_FPS);
 
 //Library time functions
@@ -601,7 +602,7 @@ int main(){
                 endGame.setFillColor(Color(255,87,34));
                 scoreText.setPosition(toActual(9),toActual(12));
                 runGame = false;
-                gameOverText.setString("You WIN!!!");
+                gameOverText.setString("You Passed!!!");
 
             }
 
