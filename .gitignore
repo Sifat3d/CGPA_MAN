@@ -31,12 +31,11 @@
 +bin/
 +Debug/
 +Release/
-+*.o
-+*.out
-+*.depend
-+*.layout
-+*.exe
 +lab/
+*.o
+*.out
+*.depend
+*.layout
 
 #SFML
 +SFML-2.3.2_Library/

@@ -317,7 +317,7 @@ int main(){
         //load aPlus image
         Texture aPlusTexture;
         aPlusTexture.setSmooth(true);
-        aPlusTexture.loadFromFile("a.png");
+        aPlusTexture.loadFromFile("media/a.png");
 
         CircleShape aPlusTile;
         aPlusTile.setRadius(OBJECT_AREA/2);
@@ -331,7 +331,7 @@ int main(){
 
     Texture userTexture;
     userTexture.setSmooth(true);
-    userTexture.loadFromFile("student.png");
+    userTexture.loadFromFile("media/student.png");
 
     student.me.setTexture(&userTexture);
 
@@ -341,7 +341,7 @@ int main(){
     //load monster image
     Texture gradeMonsterTexture;
     gradeMonsterTexture.setSmooth(true);
-    gradeMonsterTexture.loadFromFile("f.png");
+    gradeMonsterTexture.loadFromFile("media/f.png");
 
     //set monsters
     object gradeMonster_1(1,5,OBJECT_AREA/2);
@@ -376,7 +376,7 @@ int main(){
         //Text stuff
 
         Font roboto;
-        roboto.loadFromFile("Roboto-Regular.ttf");
+        roboto.loadFromFile("media/Roboto-Regular.ttf");
 
 
     //Game Over text
@@ -424,13 +424,13 @@ int main(){
 
     //Play sound before Game Loop
     SoundBuffer pacmanIntro;
-    pacmanIntro.loadFromFile("pacman_beginning.wav");
+    pacmanIntro.loadFromFile("media/pacman_beginning.wav");
     Sound introMusic;
     introMusic.setBuffer(pacmanIntro);
     introMusic.play();
 
     SoundBuffer pacmanEat;
-    pacmanEat.loadFromFile("pacman_eatfruit.wav");
+    pacmanEat.loadFromFile("media/pacman_eatfruit.wav");
     Sound pacmanEatMusic;
     pacmanEatMusic.setBuffer(pacmanEat);
 //Library Game Loop
