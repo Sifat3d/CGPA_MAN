@@ -37,3 +37,6 @@
 +*.layout
 +*.exe
 +lab/
+
+#SFML
++SFML-2.3.2_Library/
