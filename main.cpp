@@ -244,11 +244,11 @@ bool isEating(object &player,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM])
     return (Tmaptaken[player.y][player.x]==9);
 }
 
-bool EatTheGrade(object &player,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM],string (&TRTgridmap)[GRIDS_NUM], double &TscoreUser,int TaPlusCount, Sound &sound)
+bool EatTheGrade(object &player,int (&Tmaptaken)[GRIDS_NUM][GRIDS_NUM],string (&TRTgridmap)[GRIDS_NUM], double &TstudentCgpa,int TaPlusCount, Sound &sound)
 {
     //cout<<TaPlusCount<<endl;
-    TscoreUser = TscoreUser+(4.0/TaPlusCount);
-    //cout<<TscoreUser<<endl;
+    TstudentCgpa = TstudentCgpa+(4.0/TaPlusCount);
+    //cout<<TstudentCgpa<<endl;
     sound.play();
     TRTgridmap[player.y][player.x]=' ';
     player.me.setFillColor(Color::White);
@@ -395,7 +395,7 @@ int main(){
         scoreText.setCharacterSize(OBJECT_AREA-10);
         scoreText.setColor(Color::White);
         scoreText.setPosition(toActual(GRIDS_NUM-4),toActual(GRIDS_NUM-1));
-        double scoreUser = 0;
+        double studentCgpa = 0;
 
         //Retakes/Lives :v
 
@@ -404,6 +404,13 @@ int main(){
         retakesText.setCharacterSize(OBJECT_AREA-10);
         retakesText.setColor(Color::White);
         retakesText.setPosition(toActual(GRIDS_NUM-8),toActual(GRIDS_NUM-1));
+
+        //Notification text
+        Text NotifText;
+        NotifText.setFont(roboto);
+        NotifText.setCharacterSize((OBJECT_AREA/2)-1);
+        NotifText.setColor(Color::White);
+        NotifText.setPosition(toActual(6),toActual(6));
 
 
     //window from library
@@ -567,7 +574,7 @@ int main(){
                 student.retakes--;
                 student.tempImmune = true;
                 student.somethingHappenedFrame = countFrames;
-                cout<<"retakes: "<<student.retakes<<endl;
+                //cout<<"retakes: "<<student.retakes<<endl;
             }
 
             if(student.tempImmune == true)
@@ -592,17 +599,23 @@ int main(){
             //eating grades
             if(isEating(student,maptaken))
             {
-                EatTheGrade(student,maptaken,RTgridmap,scoreUser,aPlusCounter,pacmanEatMusic);
+                EatTheGrade(student,maptaken,RTgridmap,studentCgpa,aPlusCounter,pacmanEatMusic);
             }
 
             //win
+            NotifText.setString("");  //set empty so that text goes away after user moves away
             if(RTgridmap[student.y][student.x]=='*') //since 2d array
             {
+                if(studentCgpa>=2.50){
                 student.me.setFillColor(Color::Green);
                 endGame.setFillColor(Color(255,87,34));
                 scoreText.setPosition(toActual(9),toActual(12));
                 runGame = false;
-                gameOverText.setString("You Passed!!!");
+                gameOverText.setString("You Graduated!!!");
+                }
+                else {
+                    NotifText.setString("You need minimum 2.50 Cgpa to graduate!");
+                }
 
             }
 
@@ -616,7 +629,7 @@ int main(){
             }
 
             ostringstream strs;
-            strs <<roundToTwo(scoreUser);
+            strs <<roundToTwo(studentCgpa);
             string strTemp = strs.str();
 
             scoreTextString = scoreTextString+strTemp;
@@ -640,6 +653,8 @@ int main(){
             window.draw(gradeMonster_5.me);
             window.draw(gradeMonster_6.me);
             window.draw(gradeMonster_Test.me);
+
+            window.draw(NotifText);
 
             if(runGame==false)
             {
