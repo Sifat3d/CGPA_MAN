@@ -28,7 +28,7 @@ const int GRID_AREA = WINDOW_HW/GRIDS_NUM;
 const float GRID_SPACING = 0;
 const int OBJECT_AREA = GRID_AREA - (GRID_SPACING*2);
 const int Game_FPS = 60;
-const int USER_MOVE_EVERY = 60;
+const int USER_MOVE_EVERY = 50;
 const int ENEMY_MOVE_EVERY = 5; //times user
 
 const Color BG = Color(110, 189, 195);
