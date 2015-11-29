@@ -354,7 +354,7 @@ int main(){
     object gradeMonster_3(9,9,OBJECT_AREA/2);
     gradeMonster_3.me.setTexture(&gradeMonsterTexture);
 
-    object gradeMonster_4(12,14,OBJECT_AREA/2);
+    object gradeMonster_4(12,2,OBJECT_AREA/2);
     gradeMonster_4.me.setTexture(&gradeMonsterTexture);
 
     object gradeMonster_5(16,16,OBJECT_AREA/2);
